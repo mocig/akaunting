@@ -109,6 +109,7 @@ class Contact extends Model
 
     public function onCloning($src, $child = null)
     {
+        $this->email = null;
         $this->user_id = null;
     }
 
@@ -132,12 +133,12 @@ class Contact extends Model
     {
         $amount = 0;
 
-        $collection = ($this->type == 'customer') ? 'invoices' : 'bills';
+        $collection = in_array($this->type, $this->getCustomerTypes()) ? 'invoices' : 'bills';
 
         $this->$collection()->accrued()->notPaid()->each(function ($item) use (&$amount) {
             $unpaid = $item->amount - $item->paid;
 
-            $amount += $this->convertFromDefault($unpaid, $item->currency_code, $item->currency_rate);
+            $amount += $this->convertToDefault($unpaid, $item->currency_code, $item->currency_rate);
         });
 
         return $amount;
